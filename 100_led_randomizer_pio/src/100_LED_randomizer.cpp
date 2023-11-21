@@ -1,5 +1,6 @@
 #include <FastLED.h>
 #include <pixeltypes.h>
+#include <Preferences.h>
 
 #undef SER_DEBUG
 
@@ -13,9 +14,10 @@ const int del = 10;         // Zero for no delay (millis)
 
 CHSV hues[num_pixels];      // HSV color object (for storing hues)
 CRGB leds[num_pixels];      // LED color objects
+Preferences preferences;    // Flash storage accessor
 
 int num_effects = 5;        // Total number of effects defined
-int effect_state = 4;       // Store active effect
+int effect_state = 3;       // Store active effect
 int last_btn_state;         // Store button state
 bool marquee_toggle = false;// Store Marquee state
 
@@ -119,16 +121,20 @@ void effect_marquee()
 
     marquee_toggle = !(marquee_toggle);
     FastLED.show();
-    delay(del * 100);
+    delay(del * 150);
 }
 
 void setup()
 {
     // put your setup code here, to run once:
+    preferences.begin("my-app", false);
+    effect_state = preferences.getUInt("effect_state", 0);
+
     Serial.begin(115200);
     Serial.println("Starting");
     Serial.print("Mode : ");
     Serial.println(effect_state);
+
     pinMode(BTN_PIN, INPUT_PULLUP);
     last_btn_state = digitalRead(BTN_PIN);
 
@@ -150,6 +156,7 @@ void loop()
         if (button_state == LOW)
         {
             effect_state = (effect_state + 1) % num_effects;
+            preferences.putUInt("effect_state", effect_state);
             Serial.print("Mode : ");
             Serial.println(effect_state);
         }
